@@ -1,0 +1,2 @@
+#THIS MUST BE AT THE END OF THE FILE FOR GVM TO WORK!!!
+[[ -s "/home/spandich/.gvm/bin/gvm-init.sh" ]] && source "/home/spandich/.gvm/bin/gvm-init.sh"
