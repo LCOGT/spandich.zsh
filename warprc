@@ -9,3 +9,9 @@ w:/home/spandich/workspace
 lco:/home/spandich/workspace/uClinux/user/lco-apps
 ccd:/home/spandich/workspace/libccd
 ia:/home/spandich/workspace/instrument-agent
+bk:/home/spandich/workspace/blikken
+ssb:/home/spandich/workspace/site-software-build
+ps:/home/spandich/workspace/site-software-build/pubSub
+gps:/home/spandich/workspace/GWTpubSub2
+tst:/lco/etc/tcs/tst
+xx05:/lco/etc/tcs/tst/doma/1m0a/xx05

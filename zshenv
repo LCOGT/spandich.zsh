@@ -2,11 +2,6 @@
 
 export PATH="/opt/intel/bin:/opt/epd/bin:/usr/local/astrometry/bin:/home/spandich/bin:/usr/lib64/qt-3.3/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/opt/intel/bin:/opt/epd/bin:/usr/local/astrometry/bin:/usr/local/bin:/usr/bin:/bin:/home/spandich/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/wcstools/bin:/opt/wcstools/bin"
 export PATH="${HOME}/bin:${PATH}"
-export PATH="${PATH}:/opt/maven/bin"
-
-export JAVA_OPTS="-Xms2048m -Xmx2048m -XX:MaxPermSize=384m -Djava.io.tmpdir='${HOME}/tmp'"
-export MAVEN_OPTS="${MAVEN_OPTS} ${JAVA_OPTS} -XX:NewRatio=1"
-export M2_HOME=/opt/maven
 
 export ZSH=$HOME/.oh-my-zsh
 
