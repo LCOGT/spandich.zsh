@@ -102,7 +102,7 @@ color_maven() {
     defaulttext=${c_white}
 
   clear
-	mvn $* | sed -E -e "s/(\[INFO\] )(Building .*)/${info}\1${projectname}\2${c_end}/g" \
+	(mvn $* && say done || say 'fail your') | sed -E -e "s/(\[INFO\] )(Building .*)/${info}\1${projectname}\2${c_end}/g" \
                     -e "s/(Time elapsed: )([0-9]+[.]*[0-9]*.sec)/${defaulttext}\1${c_cyan}\2${c_end}/g" \
                     -e "s/(Downloading: .*)/${downloading}\1${c_end}/g" \
                     -e "s/(\[INFO\])(.* Successfully .*)/${info}\1${success}\2${c_end}/g" \
