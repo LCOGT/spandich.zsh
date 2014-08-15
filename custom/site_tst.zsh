@@ -20,6 +20,7 @@ export SITE_TST_HOME=${LCO_HOME}/etc/tcs/tst
 alias tst-site-start="${SITE_TST_HOME}/run/runSite.sh"
 alias tst-site-stop="${SITE_TST_HOME}/run/runSite.sh -s"
 alias tst-inst-start="${SITE_TST_HOME}/run/runInstruments.sh -u heaterpower-SNAPSHOT doma 1m0a"
+alias tst-inst-restart="pkill -f Instrument ; =rm -rf ${LCO_HOME}/log/*; tst-start-instruments"
 
 function tst-tail() {
   multitail --mergeall $(ls -1 ${LCO_HOME}/log/*(.) ${LCO_HOME}/log/*(@))
