@@ -20,6 +20,7 @@ export SITE_TST_HOME=${LCO_HOME}/etc/tcs/tst
 alias tst-site-start="${SITE_TST_HOME}/run/runSite.sh"
 alias tst-site-stop="${SITE_TST_HOME}/run/runSite.sh -s"
 alias tst-inst-start="${SITE_TST_HOME}/run/runInstruments.sh -u heaterpower-SNAPSHOT doma 1m0a"
+alias tst-inst-restart="pkill -f Instrument ; =rm -rf ${LCO_HOME}/log/*; clear ; tst-inst-start"
 
 function tst-diag-tt-status-core() {
   watch "curl --silent http://tt/cgi-bin/status\?out\=json | python -mjson.tool | grep -v original | grep -E -A 8  '(CCD|Cryo).*(Temperature|Heater)' | grep -E '"(name|value)"' | grep -E -A1 'CCD|Cryo' | awk '1;!(NR%2){print \"\";}'"
@@ -31,14 +32,23 @@ function tst-tail() {
   multitail --mergeall $(ls -1 ${LCO_HOME}/log/*(.) ${LCO_HOME}/log/*(@))
 }
 
-function tst-tmux-bottom() {
-  local exists=$(tmux list-sessions | grep tst-bottom | wc -l )
+function tst-tmux() {
+  if [ $# -ne 1 ]; then
+    echo "Usage: ${0} session-name"
+    return
+  fi
+  local session_name=${1} ; shift
+
+  local exists=$(tmux list-sessions | grep ${session_name} | wc -l )
   if [ ${exists} -eq 0 ]; then
-    ${ZSH_CUSTOM}/support/tmux/tst-bottom.tmux
+    ${ZSH_CUSTOM}/support/tmux/${session_name}.tmux
   else
-    tmux a -t tst-bottom
+    tmux a -t ${session_name}
   fi
 }
+
+alias tst-tmux-bottom='tst-tmux tst-bottom'
+alias tst-tmux-top='tst-tmux tst-top'
 
 function tst-build() {
   (
@@ -49,6 +59,26 @@ function tst-build() {
     z gwt && mvn clean install &&
     say done
   ) || say failed
+}
+
+function tst-tail-dbhost-value() {
+  if [ $# -ne 1 ]; then
+    echo "Usage: ${0} name"
+    return
+  fi
+
+  local name=${1}; shift
+
+  local identifier=$(echo "select IDENTIFIER from PROPERTY where ADDRESS_DATUM = '${name}'" | mysql --silent --host=dbhost --user=hibernate --password=hibernate hibernate)
+
+  if [ -z "${identifier}" ]; then
+    echo "Error: no identifier found for: '${name}'"
+    return
+  fi
+
+  echo "${name} -> ${identifier}"
+  
+  ssh dbhost sudo "tail -F /tmp/mysql_query.log | grep ${identifier} | sed 's/[ ]\+/ /g' | cut -d' ' -f4- |  python -c 'import sys;import sqlparse;print sqlparse.format(sys.stdin.read(),  reindent=True)' | grep -A 10 ${identifier} | paste -d' ' -s | cut -d, -f5 | cut -d\' -f2"
 }
 
 function tst-build-64() {
