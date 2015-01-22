@@ -7,7 +7,12 @@ alias z=wd
 alias l='ls -lah'           # Long view, show hidden
 alias la='ls -AF'           # Compact view, show hidden
 alias ll='ls -lFh'          # Long view, no hidden
-alias visc='vi ~/.ssh/config'
+
+
+function visc() {
+    vi ~/.ssh/config_head
+    ~/bin/make_ssh_config
+}
 
 function root() {
   [ ${UID} -ne 0 ] || return

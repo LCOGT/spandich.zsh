@@ -1,6 +1,7 @@
 plugins=(
   options
   common
+  docker
   ant
   gnu-utils
   compleat
@@ -33,3 +34,5 @@ source $ZSH/oh-my-zsh.sh
 
 #THIS MUST BE AT THE END OF THE FILE FOR GVM TO WORK!!!
 [[ -s ~/.gvm/bin/gvm-init.sh ]] && source ~/.gvm/bin/gvm-init.sh
+
+source /etc/profile.d/rvm.sh

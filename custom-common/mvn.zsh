@@ -26,30 +26,80 @@ export BACKGROUND_MAGENTA=`tput setab 5`
 export BACKGROUND_CYAN=`tput setab 6`
 export BACKGROUND_WHITE=`tput setab 7`
 export RESET_FORMATTING=`tput sgr0`
+
+alias deptree='mvn dependency:tree'
+
+function _mvn-chunk() {
+    mvn help:effective-pom | grep -A100 -E '< */parent>' | grep "<${1}>" | head -n 1 | cut -d'>' -f2 | cut -d'<' -f1
+}
+
+function mvn-group() {
+    _mvn-chunk 'groupId'
+}
+
+function mvn-artifact() {
+    _mvn-chunk 'artifactId'
+}
+
+function mvn-version() {
+    _mvn-chunk 'version'
+}
+
+function deptreeml() {
+    local mlfile=$(mktemp --tmpdir --suffix='.graphml' dependency-tree-XXXX)
+    echo ${mlfile}
+    deptree -DoutputType=graphml -DoutputFile="${mlfile}"
+}
  
 # Wrapper function for Maven's mvn command.
 function mvn-color() {
-  local tmp=$(mktemp)
+  local retval
+
   # Filter mvn output using sed
-  =mvn $@ > "${tmp}"
-  local retval=$?
-  
-  cat "${tmp}" | sed -e "s/\(\[INFO\]\ \-.*\)/${TEXT_BLUE}${BOLD}\1/g" \
+  =mvn $@ | sed -e "s/\(\[INFO\]\ \-.*\)/${TEXT_BLUE}${BOLD}\1/g" \
                -e "s/\(\[INFO\]\ \[.*\)/${RESET_FORMATTING}${BOLD}\1${RESET_FORMATTING}/g" \
                -e "s/\(\[INFO\]\ BUILD SUCCESSFUL\)/${BOLD}${TEXT_GREEN}\1${RESET_FORMATTING}/g" \
                -e "s/\(\[WARNING\].*\)/${BOLD}${TEXT_YELLOW}\1${RESET_FORMATTING}/g" \
                -e "s/\(\[ERROR\].*\)/${BOLD}${TEXT_RED}\1${RESET_FORMATTING}/g" \
                -e "s/Tests run: \([^,]*\), Failures: \([^,]*\), Errors: \([^,]*\), Skipped: \([^,]*\)/${BOLD}${TEXT_GREEN}Tests run: \1${RESET_FORMATTING}, Failures: ${BOLD}${TEXT_RED}\2${RESET_FORMATTING}, Errors: ${BOLD}${TEXT_RED}\3${RESET_FORMATTING}, Skipped: ${BOLD}${TEXT_YELLOW}\4${RESET_FORMATTING}/g"
+  local mvn_status=$(echo ${pipestatus} | awk '{ print $1 }')
  
   # Make sure formatting is reset
   echo -ne ${RESET_FORMATTING}
-  rm "${tmp}"
-
-  if [ $retval -ne 0 ]; then
-    return 1
-  fi
-  return 0
+  return ${mvn_status}
 }
  
 # Override the mvn command with the colorized one.
 alias mvn=mvn-color
+
+function mvnmkdir() {
+  if [ $# -ne 1 ] && [ $# -ne 2 ]; then
+    echo "Usage: ${0} type [ package ]"
+    return
+  fi
+
+  local dir_type=${1}; shift
+  local package=${1}
+
+  if [ -n "${package}" ]; then
+    package=$(echo "${package}" | sed 's/\./\//g')
+  fi
+
+  local dir_path=${dir_type}/${package}
+  
+  mkdir -vp src/main/${dir_path}
+  mkdir -vp src/test/${dir_path}
+}
+
+function mvnmkdirgroovy() {
+  if [ $# -gt 1 ]; then
+    echo "Usage: ${0} [ package ]"
+    return
+  fi
+
+  local package=${1}; shift
+
+  for name in groovy resources ; do
+    mvnmkdir ${name} ${package}
+  done
+}

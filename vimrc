@@ -2,7 +2,6 @@ set nocompatible
 
 set history=100
 
-set paste
 
 " color
 set t_Co=256
@@ -16,6 +15,9 @@ filetype indent on
 
 " set number
 
+set paste
+"set cursorline
+
 " Search
 set ignorecase
 set smartcase
@@ -26,13 +28,13 @@ set wrapscan
 set isfname-==
 
 "indent stuff 
-set tabstop=2
-set shiftwidth=2
+set tabstop=4
+set shiftwidth=4
 set expandtab
 set cindent
 set smartindent
 set autoindent
-set softtabstop=2
+set softtabstop=4
 
 set showmatch
 set showcmd
@@ -40,6 +42,9 @@ set showmode
 
 set visualbell
 set backspace=indent,eol,start
+
+set backupdir=~/.vim/temp
+set directory=~/.vim/temp
 
 "Cmd and status line stuff
 set cmdheight=2
@@ -69,8 +74,9 @@ set scrolloff=8
 
 set fillchars=
 
-" disable encryption
+"disable encryption
 set key=
+cnoreabbrev X x
 
 "completion
 set wildmenu

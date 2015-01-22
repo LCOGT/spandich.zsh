@@ -1,0 +1,7 @@
+#!/usr/bin/env zsh
+
+CONFIG=~/.ssh/config
+
+rm -f ${CONFIG}
+${0:h}/support/do_make_ssh_config.zsh > ${CONFIG}
+chmod 0600 ${CONFIG}

@@ -1,0 +1,24 @@
+#!/usr/bin/env zsh
+
+set -e
+
+PROJECT_NAME=reduction
+BASE_DIR=/home/spandich/workspace
+GIT_DIR=${BASE_DIR}/${PROJECT_NAME}.git
+SVN_DIR=${BASE_DIR}/${PROJECT_NAME}
+
+
+rm -rf "${SVN_DIR}"
+cd "${BASE_DIR}" && svn co ${SVNLCO}/${PROJECT_NAME}/branches/refactoring ${PROJECT_NAME}
+for commit in $(cd ${GIT_DIR} && git log --no-decorate --author=spandich --branches=refactoring | grep -E '^commit ' | awk '{ print $2 }' | tac); do
+    cd ${GIT_DIR}
+    message=$(git show --oneline ${commit} | head -n1 | cut -d' ' -f2-)
+    diff=$(git show ${commit})
+    echo ${commit} -- ${message}
+
+    cd ${SVN_DIR}
+    echo ${diff} | patch --remove-empty-files --strip=1
+    svn status | grep -E '^\?' | awk '{ print $2 }' | xargs -r svn add
+    svn commit -m "${message}"
+    read
+done
