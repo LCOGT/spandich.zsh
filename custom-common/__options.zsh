@@ -28,4 +28,4 @@ setopt no_beep
 setopt hist_verify
 setopt no_rm_star_silent
 setopt print_exit_value
-setopt long_list_jobs
+#setopt long_list_jobs

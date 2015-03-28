@@ -1,0 +1,5 @@
+#!/usr/bin/env zsh
+
+grep offset /var/log/ntpdate \
+    | sed 's/.* offset *\(\S\+\) *sec/\1/' \
+    | awk '{ n++; t+=$1 } END { print "ntp average offset: "int(t/n * 10**6) / 10**6" sec" }'

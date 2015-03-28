@@ -5,6 +5,14 @@ function virestcam() {
     vi "${SELF}" && source "${SELF}"
 }
 
+function rc-tail() {
+    clear && tail -n 100 -F /lco/log/restcam.log
+}
+
+function rc-tail-metrics() {
+    clear && rc-tail | grep -E metrics
+}
+
 function rc-fetch-fits() {
     local fits_file=/tmp/temp.fits
     local url="http://localhost:8080/api/Imager.FIT?Duration=${1:=0.6}"

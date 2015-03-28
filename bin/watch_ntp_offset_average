@@ -1,0 +1,3 @@
+#!/usr/bin/env zsh
+
+watch -td -n 60 "${0:h}/ntp_offset_average"

@@ -66,7 +66,7 @@ set cpoptions=aAcefFPs$
 set foldopen=block,insert,jump,mark,percent,quickfix,search,tag,undo
 
 "invisibles 
-"set listchars=eol:¬,tab:›\  
+set listchars=eol:¬,tab:›\  
 "set list
 
 set scrolloff=8
@@ -109,7 +109,7 @@ nnoremap ,fw :FufFile **/<cr>
 
 
 
-colorscheme phd
+" colorscheme phd
 highlight SpecialKey  term=bold ctermfg=7 guifg=grey30
 highlight NonText     term=bold ctermfg=7 guifg=grey30 guibg=NONE
 

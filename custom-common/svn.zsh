@@ -5,6 +5,13 @@ export SVN=http://${SVN_SERVER}/svn
 export SVNLCO=${SVN}/telsoft/Lco
 export SVNME=${SVN}/user/${USER}
 
+function svnaddall() {
+    if svn info &> /dev/null; then
+        svn status | grep -E '^\?' | awk '{ print $2 }' | xargs svn add
+    else
+        echo 'not an SVN directory'
+    fi
+}
 
 function svnundo() {
     if [ $# -eq 0 ]; then
@@ -12,6 +19,23 @@ function svnundo() {
     else
         svn revert $@
     fi
+}
+
+function svnignore-all() {
+  if [ $# -ne 1 ]; then
+    echo "Usage: ${0} fitler"
+    return
+  fi
+
+  local filter="${1}"; shift
+
+  for dir in $(find . -name "${filter}" | xargs -L1 dirname); do
+    figlet "${dir}"
+    (svn propget svn:ignore ${dir} | grep -v "${filter}" | awk NF ; echo "${filter}") |  svn propset  --non-interactive -F - svn:ignore ${dir}
+    svn propget svn:ignore ${dir}
+    echo
+    echo
+  done
 }
 
 function visvn() {
@@ -27,17 +51,18 @@ function _svnco() {
   local function_name=${1}; shift;
   local base=${1}; shift
 
-  if [ $# -ne 1 ] && [ $# -ne 2 ]; then
-    echo "Usage: ${0} project_name [ branch ]"
+  if [ $# -ew  0 ] || [ $# -gt 3 ]; then
+    echo "Usage: ${0} project_name [ branch [ dir ] ]"
     return 1
   fi
 
   local project=${1}; shift
   local branch=${1:=trunk}; shift
+  local dir=${1:=${WORKSPACE}}; shift
   [ "${branch}" == 'trunk' ] || branch="branches/${branch}"
   local url=${base}/${project}/${branch}
 
-  (cd ${WORKSPACE} && svn co ${url} ${project})
+  (cd ${dir} && svn co ${url} ${project})
 }
 
 function svnissue() {
@@ -66,6 +91,7 @@ function svnc() {
 }
 
 alias svns='svn status'
+alias svnll='svn log --limit 10'
 
 function svnlogme() {
   svn log $@ | grep -B2 ${USER} | sed '/^-\+/d' | paste - - -d:
@@ -129,4 +155,17 @@ function svnswitch() {
     local new_branch="${base_url}/${branch}"
     
     svn switch "${new_branch}"
+}
+
+function svnbranch() {
+    if [ $# -ne 2 ]; then
+        echo "Usage: ${0} project branch"
+        return
+    fi
+    local project=$1;shift
+    local branch=$1;shift
+    local branch_url="${SVNLCO}/${project}/branches/${branch}"
+
+    svn cp -m "start of branch: ${branch}" "${SVNLCO}/${project}/trunk" "${branch_url}" && \
+    (cd "${WORKSPACE}" && svn co "${branch_url}" "${project}-${branch}")
 }

@@ -6,6 +6,7 @@ export PATH="${HOME}/bin:${PATH}"
 export ZSH=$HOME/.oh-my-zsh
 
 export EDITOR=vim
+export PAGER=most
 export LISTMAX=200
 
 export ZSH_THEME='mikeh'
@@ -48,7 +49,7 @@ export WINEPREFIX=~/.wine
 export WINEARCH=win64
 export WORKSPACE=~/workspace
 
-export JAVA_HOME=/opt/jdk7
+export JAVA_HOME="${JAVA7_HOME}"
 export PATH="${JAVA_HOME}/bin:${PATH}"
 
 export MAVEN_HOME=/opt/maven3

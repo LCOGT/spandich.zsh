@@ -1,3 +1,5 @@
+xhost + &> /dev/null
+
 plugins=(
   options
   common

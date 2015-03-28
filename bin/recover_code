@@ -1,0 +1,59 @@
+#!/usr/bin/env zsh
+
+BASE_URL='http://buildsba3.lco.gtn:8060/fisheye/cru'
+BASE_REVIEW_DIR=~/workspace/recover2
+
+if [ $# -ne 1 ]; then
+    echo "Usage: ${0:t} project"
+    exit 1
+fi
+project="${1}"; shift
+
+alias pretty_html="python3 -c 'import sys; from bs4 import BeautifulSoup; print(BeautifulSoup(sys.stdin.read()).prettify());'"
+
+function fetch_html() {
+    curl --silent "${BASE_URL}${1}"
+}
+
+function process_file() {
+    local type=$1; shift
+    local f=$1; shift
+
+    package_dir=$(grep -E '^package ' "${f}" | sed 's/^package *\(.*\);/\1/' | sed 's/\./\//g')
+    src_dir="${dir}/src/${type}/java/${package_dir}"
+    mkdir -p "${src_dir}"
+    mv "${f}" "${src_dir}"
+    echo "${f:t} -> ${package_dir}"
+}
+
+function fetch_review() {
+    echo -n "Fetching ${project} review #${review_number} ... "
+
+    local review_number=$1; shift
+    
+    local review_dir="${BASE_REVIEW_DIR}/${project}-$(printf '%02d' ${review_number})"
+    
+    for file_href in $(fetch_html "/${project}-${review_number}"  | pretty_html  | grep -E 'http://.+?raw'); do
+        file_url=$(echo "${file_href}" | grep http | sed 's/^.*"\(http:.*\)".*$/\1/')
+        if [ -n "${file_url}" ]; then
+            # TODO include module
+            local file_path="${review_dir}/$(echo "${file_url}" | sed 's/^.*\/\([A-Za-z0-9_]*\/src\/.*\)\/.*$/\1/')"
+            mkdir -p "${file_path}"
+            wget --tries=5 --directory-prefix="${file_path}" --progress=bar "${file_url}"
+        fi
+    done
+    
+    chmod -R a-w "${review_dir}"
+    echo 'done.'
+}
+
+for review_number in $(
+    fetch_html "/?filter=custom&project=${project}" \
+        | pretty_html \
+        | grep -E '^ *'"${project}"'-[0-9]+ *$' \
+        | sed 's/^.*-\([0-9]*\).*$/\1/' \
+        | sort -n
+); do
+    fetch_review "${review_number}"
+    exit
+done

@@ -2,7 +2,15 @@
 
 if [ "$(which figlet)" ]; then
 
-alias figlet='figlet -f nancyj -w 255'
+function vifiglet() {
+  SELF=${ZSH_CUSTOM_COMMON_DIR}/figlet.zsh
+  vi "${SELF}" && source "${SELF}"
+}
+
+
+function figlet {
+    =figlet -f standard -w 255 -k $@
+}
 
 function fontbook {
   for font in $(figlist | grep -B100 'Figlet control files in this directory:' | tail -n +1 | grep -Ev '^Figlet\ control' | sort); do
@@ -15,8 +23,11 @@ function fontbook {
 }
 
 function figcom {
-  figlet $* | sed 's|^|//  |'
-  echo "// $*"
+    echo '/**'
+    figlet $* | sed 's|^| *   |'
+
+    echo " *  $*"
+    echo ' */'
 }
 
 function figxml {

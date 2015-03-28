@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-export PAGER=less
+export PAGER=most
 
 export LCOGT_DOMAIN=lco.gtn
 export LCO_ROOT=/lco
@@ -51,13 +51,30 @@ function reset-taskbar() {
   nohup unit-panel-service &> /dev/null &
 }
 
-alias more=less
+alias more=most
 alias srv='sudo service'
 alias df='dfc -T -ug -W -t ext,ext2,ext3,ext4,nfs'
 alias mysqladmin='sudo mysqladmin'
 alias virc='vi ~/.zshrc'
 alias vienv='vi ~/.zshenv'
-alias figlet='figlet -w 132 -f small'
+alias mkdir='mkdir -p'
+
+function pkill() {
+    =pkill $@
+    echo $?
+}
+
+
+function kindkill() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: ${0} arguments"
+    fi
+    echo SIGTERM
+    pgrep $@ && pkill --signal SIGTERM $@
+    sleep 1
+    echo SIGKILL
+    pgrep $@ &&  pkill --signal SIGKILL $@
+}
 
 function dpkg-list() {
     COLUMNS=$(tput cols) dpkg -l | less
@@ -97,25 +114,6 @@ function _include() {
 }
 function find-latest() {
   find ${1:=.} -type f | xargs stat --format '%Y :%y %n' | sort -nr | cut -d: -f2- | head -n ${2:=25}
-}
-
-alias mci='maven clean install'
-
-function svnignore-all() {
-  if [ $# -ne 1 ]; then
-    echo "Usage: ${0} fitler"
-    return
-  fi
-
-  local filter="${1}"; shift
-
-  for dir in $(find . -name "${filter}" | xargs -L1 dirname); do
-    figlet "${dir}"
-    (svn propget svn:ignore ${dir} | grep -v "${filter}" | awk NF ; echo "${filter}") |  svn propset  --non-interactive -F - svn:ignore ${dir}
-    svn propget svn:ignore ${dir}
-    echo
-    echo
-  done
 }
 
 function ssh-command-login() {
@@ -166,3 +164,6 @@ function speak() {
 
 alias docker=docker.io
 
+function lssbig() {
+    ls -l $(lsusb | grep 'SBIG' | cut -d: -f1 | awk '{ print "/dev/bus/usb/"$2"/"$4 }')
+}

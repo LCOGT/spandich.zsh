@@ -5,6 +5,9 @@ function vimvn() {
   vi "${SELF}" && source "${SELF}"
 }
 
+export M2_HOME=/opt/maven3
+export MAVEN_OPTS="${JAVA_OPTS} -XX:NewRatio=1 -Djava.library.path=/home/spandich/libs -Dmaven.test.failure.ignore"
+
 # Formatting constants
 export BOLD=`tput bold`
 export UNDERLINE_ON=`tput smul`
@@ -45,6 +48,10 @@ function mvn-version() {
     _mvn-chunk 'version'
 }
 
+function mci() {
+    mvn clean install $@
+}
+
 function deptreeml() {
     local mlfile=$(mktemp --tmpdir --suffix='.graphml' dependency-tree-XXXX)
     echo ${mlfile}
@@ -70,7 +77,7 @@ function mvn-color() {
 }
  
 # Override the mvn command with the colorized one.
-alias mvn=mvn-color
+alias mvn='mvn-color --fail-never'
 
 function mvnmkdir() {
   if [ $# -ne 1 ] && [ $# -ne 2 ]; then
@@ -102,4 +109,19 @@ function mvnmkdirgroovy() {
   for name in groovy resources ; do
     mvnmkdir ${name} ${package}
   done
+}
+
+function mvn-switch() {
+    if  [ $# -ne 1 ]; then
+        echo "Usage: $0 [2|3]"
+        return
+    fi
+    local version=${1}; shift
+    if [[ "${version}" -ne 2 && "${version}" -ne 3 ]]; then
+        echo "Error: supported versions are 2 & 3."
+        return 1
+    fi
+    export MAVEN_HOME=/opt/maven${version}
+    export PATH="$(echo ${PATH} | sed 's/:\/opt\/maven.//'):${MAVEN_HOME}/bin"
+    rehash
 }
