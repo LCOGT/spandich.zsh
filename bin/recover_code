@@ -26,7 +26,7 @@ function fetch_review() {
     for file_href in $(fetch_html "${project}-${review_number}"  | pretty_html  | grep -E 'http://.+?raw'); do
         file_url=$(echo "${file_href}" | grep http | sed 's/^.*"\(http:.*\)".*$/\1/')
         if [ -n "${file_url}" ]; then
-            local file_path="$(echo "${file_url}" | sed 's/^.*\/telsoft\/\([A-Za-z0-9_-]*\)*\/\(branches\/[A-Za-z0-9_-]*\|trunk\|issue-[0-9]*\)\/\(.*\)$/\1\/\3/')"
+            local file_path="$(echo "${file_url}" | sed 's/^.*\/telsoft\(\/\([A-Za-z0-9_-]*\)*\)\/\(branches\/[A-Za-z0-9_-]*\|trunk\|issue-[0-9]*\)\/\(.*\)$/\1\4/')"
             [[ "${file_path}" =~ '^http:' ]] && die "Unhanded path: ${file_path}"
             local file_name="$(echo "${file_url}" | sed 's/^.*\/\([A-Za-z0-9_-\.]*\)$/\1/')"
             echo -n "\t$Fetching ${file_path}/${file_name} ... "
