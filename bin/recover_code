@@ -1,59 +1,69 @@
 #!/usr/bin/env zsh
 
-BASE_URL='http://buildsba3.lco.gtn:8060/fisheye/cru'
 BASE_REVIEW_DIR=~/workspace/recover2
-
-if [ $# -ne 1 ]; then
-    echo "Usage: ${0:t} project"
-    exit 1
-fi
-project="${1}"; shift
+BASE_URL='http://buildsba3.lco.gtn:8060/fisheye/cru'
 
 alias pretty_html="python3 -c 'import sys; from bs4 import BeautifulSoup; print(BeautifulSoup(sys.stdin.read()).prettify());'"
 
-function fetch_html() {
-    curl --silent "${BASE_URL}${1}"
+function die() {
+    echo "$@" > /dev/stderr
+    exit 1
 }
 
-function process_file() {
-    local type=$1; shift
-    local f=$1; shift
+[ $# -gt 0 ] || die "Usage: ${0:t} project [ review_number ... ]"
+project=$1; shift
 
-    package_dir=$(grep -E '^package ' "${f}" | sed 's/^package *\(.*\);/\1/' | sed 's/\./\//g')
-    src_dir="${dir}/src/${type}/java/${package_dir}"
-    mkdir -p "${src_dir}"
-    mv "${f}" "${src_dir}"
-    echo "${f:t} -> ${package_dir}"
+function fetch_html() {
+    curl --silent "${BASE_URL}/${1}"
 }
 
 function fetch_review() {
-    echo -n "Fetching ${project} review #${review_number} ... "
-
     local review_number=$1; shift
+    echo "Fetching ${project} review #${review_number} ... "
     
     local review_dir="${BASE_REVIEW_DIR}/${project}-$(printf '%02d' ${review_number})"
     
-    for file_href in $(fetch_html "/${project}-${review_number}"  | pretty_html  | grep -E 'http://.+?raw'); do
+    for file_href in $(fetch_html "${project}-${review_number}"  | pretty_html  | grep -E 'http://.+?raw'); do
         file_url=$(echo "${file_href}" | grep http | sed 's/^.*"\(http:.*\)".*$/\1/')
         if [ -n "${file_url}" ]; then
-            # TODO include module
-            local file_path="${review_dir}/$(echo "${file_url}" | sed 's/^.*\/\([A-Za-z0-9_]*\/src\/.*\)\/.*$/\1/')"
-            mkdir -p "${file_path}"
-            wget --tries=5 --directory-prefix="${file_path}" --progress=bar "${file_url}"
+            local file_path="$(echo "${file_url}" | sed 's/^.*\/telsoft\/\([A-Za-z0-9_-]*\)*\/\(branches\/[A-Za-z0-9_-]*\|trunk\|issue-[0-9]*\)\/\(.*\)$/\1\/\3/')"
+            [[ "${file_path}" =~ '^http:' ]] && die "Unhanded path: ${file_path}"
+            local file_name="$(echo "${file_url}" | sed 's/^.*\/\([A-Za-z0-9_-\.]*\)$/\1/')"
+            echo -n "\t$Fetching ${file_path}/${file_name} ... "
+            mkdir -p "${review_dir}/${file_path}"
+            wget --quiet --tries=5 --directory-prefix="${review_dir}/${file_path}" "${file_url}"
+            echo "done."
         fi
     done
-    
-    chmod -R a-w "${review_dir}"
-    echo 'done.'
+   
+    if [ -d "${review_dir}" ]; then
+        chmod -R a-w "${review_dir}"
+    else
+        echo "\t[dead]"
+    fi
+    echo 'Done.'
 }
 
-for review_number in $(
-    fetch_html "/?filter=custom&project=${project}" \
-        | pretty_html \
-        | grep -E '^ *'"${project}"'-[0-9]+ *$' \
-        | sed 's/^.*-\([0-9]*\).*$/\1/' \
-        | sort -n
-); do
-    fetch_review "${review_number}"
-    exit
-done
+if [ $# -gt 0 ]; then
+    for review_number in $@; do
+        fetch_review "${review_number}"
+        echo
+    done
+else
+    if [ -d "${BASE_REVIEW_DIR}" ]; then
+        chmod -R u+w "${BASE_REVIEW_DIR}"
+        rm -rf "${BASE_REVIEW_DIR}"
+    fi
+    for review_number in $(
+        fetch_html "?filter=custom&project=${project}" \
+            | pretty_html \
+            | grep -E '^ *'"${project}"'-[0-9]+ *$' \
+            | sed 's/^.*-\([0-9]*\).*$/\1/' \
+            | sort -n
+    ); do
+        fetch_review "${review_number}"
+        echo
+    done
+fi
+
+echo 'Recovery done.'
