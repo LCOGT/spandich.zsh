@@ -52,6 +52,18 @@ function mci() {
     mvn clean install $@
 }
 
+function mciq() {
+    mci $@ -Dmaven.test.skip
+}
+
+function mcd() {
+    mvn clean deploy $@
+}
+
+function mcdq() {
+    mcd $@ -Dmaven.test.skip
+}
+
 function deptreeml() {
     local mlfile=$(mktemp --tmpdir --suffix='.graphml' dependency-tree-XXXX)
     echo ${mlfile}

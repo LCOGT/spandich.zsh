@@ -72,12 +72,34 @@ function rc-push() {
     speak done
 }
 
-function rc-push-ka05() {
+function rc-push-sbig-32() {
     if [ $# -ne 1 ]; then
-        echo "Usage: ${0} jar_alias"
+        echo "Usage: ${0} icc_server"
         return
     fi
 
-    local jar_alias=$1; shift
-    rc-push apogee bpl aqwa 0m4a 1 ${jar_alias}
+    local icc="${1}"; shift
+    local lib="libsbigrestcam.so"
+    local lib_deploy="/lco/restcam/lib/${lib}"
+
+    z rc
+    if ! sbig/build_swig.sh; then
+        echo "Error: failed to build library locally: ${lib}"
+        return
+    fi
+
+    if ! ssh restcam32 cd workspace/restcam \&\& git pull \&\& sbig/build_swig.sh; then
+        echo "Error: failed to build library remotely: ${lib}"
+        return
+    fi
+
+    ssh "${icc}" "${lib_deploy}" "${lib_deploy}.$$"
+
+    scp restcam32:workspace/restcam/sbig/src/main/assembly/root/lib/32/libsbigrestcam.so /tmp/
+    scp "/tmp/${lib}" ${icc}:"${lib_deploy}"
+    rm "/tmp/${lib}"
+
+    ssh ${icc} sha256sum "${lib_deploy}"
 }
+
+alias kb81='ssh -t lsc-aqwa-0m4a-icc1'

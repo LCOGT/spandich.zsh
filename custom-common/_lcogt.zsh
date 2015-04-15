@@ -41,6 +41,8 @@ alias tus="cd ${SITE_TUS}"
 
 alias vihosts='sudo vi /etc/hosts'
 
+alias cr='crucible.py'
+
 function vilcogt() {
   SELF=${ZSH_CUSTOM_COMMON_DIR}/_lcogt.zsh
   vi "${SELF}" && source "${SELF}"
@@ -53,7 +55,7 @@ function reset-taskbar() {
 
 alias more=most
 alias srv='sudo service'
-alias df='dfc -T -ug -W -t ext,ext2,ext3,ext4,nfs'
+alias dfc='dfc -T -ug -W -t ext,ext2,ext3,ext4,nfs'
 alias mysqladmin='sudo mysqladmin'
 alias virc='vi ~/.zshrc'
 alias vienv='vi ~/.zshenv'
@@ -167,3 +169,32 @@ alias docker=docker.io
 function lssbig() {
     ls -l $(lsusb | grep 'SBIG' | cut -d: -f1 | awk '{ print "/dev/bus/usb/"$2"/"$4 }')
 }
+
+function zshnew() {
+    if [ $# -ne 1 ]; then
+        echo "Usage: ${0} script_name" > /dev/stderr
+        return
+    fi
+
+    local script="${1}"; shift
+    
+    if [ -a "${script}" ]; then
+        echo "Error: ${script} already exists." > /dev/stderr
+        return
+    fi
+
+    echo "#!/usr/bin/env zsh\n\n" > "${script}"
+    chmod u+x "${script}"
+    vi +$ "${script}"
+}
+
+function taillco() {
+    multitail --mergeall --no-repeat --mark-interval 60 --follow-all -T -du -mb 10MB --mark-change --retry-all --basename -Q 5 "/lco/log/*"
+    stty sane
+}
+
+function vifiles() {
+    vi *(.) *(@)
+}
+
+alias ports='sudo netstat -nlutp'

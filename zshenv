@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-export PATH="/opt/intel/bin:/opt/epd/bin:/usr/local/astrometry/bin:/home/spandich/bin:/usr/lib64/qt-3.3/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/opt/intel/bin:/opt/epd/bin:/usr/local/astrometry/bin:/usr/local/bin:/usr/bin:/bin:/home/spandich/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/wcstools/bin:/opt/wcstools/bin"
+export PATH="/opt/intel/bin:/opt/epd/bin:/usr/local/astrometry/bin:/home/spandich/bin:/usr/lib64/qt-3.3/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/opt/intel/bin:/opt/epd/bin:/usr/local/astrometry/bin:/usr/local/bin:/usr/bin:/bin:/home/spandich/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/wcstools/bin:/opt/wcstools/bin:${HOME}/.gvm/groovy/current/bin"
 export PATH="${HOME}/bin:${PATH}"
 
 export ZSH=$HOME/.oh-my-zsh

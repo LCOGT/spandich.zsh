@@ -28,7 +28,6 @@ function visc_entry() {
 
     echo "Host ${host}" >> "${SSH_CONFIG}"
     echo "  Hostname ${hostname}" >> "${SSH_CONFIG}"
-    echo "  ForwardX11 yes" >> "${SSH_CONFIG}"
     echo "  User ${SSH_USER}" >> "${SSH_CONFIG}"
     echo >> "${SSH_CONFIG}"
 }
@@ -96,7 +95,24 @@ function lw {
 
 alias history='history 100'
 alias h='history'
-function hgrep { history | grep $* }
+
+function _hgrep() {
+    local file="${1}"; shift
+    if [ $# -ne 0 ]; then
+        local regex="${1}"; shift
+        cat =(grep -E "${regex}" "${file}") > "${file}"
+        _hgrep "${file}" $@
+    fi
+}
+
+function hgrep() {
+    clear
+    local file=$(mktemp "hgrep.${USER}.XXX")
+    history > "${file}"
+    _hgrep "${file}" $@
+    cat "${file}"
+    rm "${file}"
+}
 
 alias grep='grep --color=auto'
 

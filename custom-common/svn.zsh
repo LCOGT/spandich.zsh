@@ -169,3 +169,54 @@ function svnbranch() {
     svn cp -m "start of branch: ${branch}" "${SVNLCO}/${project}/trunk" "${branch_url}" && \
     (cd "${WORKSPACE}" && svn co "${branch_url}" "${project}-${branch}")
 }
+
+function svnlast() {
+    svn log \
+        | grep -A100 $(svn log  --stop-on-copy --quiet \
+        | grep -E '^r' \
+        | tail -n 1 \
+        | awk '{ print $1 }') \
+        | grep -E '^r[0-9]+' \
+        | head -n 2 \
+        | tail -n 1 \
+        | awk '{ print $1 }' \
+        | sed 's/^r//'
+}
+
+function svntrunk() {
+    svn info  | grep -E '^URL:' | awk '{ print $2 }' | sed 's/\/\(branches\/.*\|trunk\)$/\/trunk/'
+}
+
+function svndifftrunk() {
+    svn diff -x --ignore-all-space --patch-compatible "$(svntrunk)" . | vimdiff -R -
+}
+
+function svnmergeup() {
+    local last_revision=$(svnlast)
+    if [ -z "${last_revision}" ]; then
+        echo 'Error: no last revision found.' > /dev/stderr
+        return
+    fi
+
+    local trunk=$(svntrunk)
+    if [ -z "${trunk}" ]; then
+        echo 'Error: no trunk URL found.' > /dev/stderr
+        return
+    fi
+
+    echo svn up \&\& svn merge -r"${last_revision}:HEAD" "${trunk}"
+}
+
+function svnmergedown() {
+    local branch=$(svn info  | grep -E '^URL:' | awk '{ print $2 }')
+    echo svn commit -m "'final commit'" \&\& \
+    svn switch "$(svntrunk)" \&\& \
+    svn merge --reintegrate "${branch}"
+}
+
+function svncomparetotrunk() {
+    local trunk="$(svntrunk)"
+    for f in $@; do
+        svn diff --patch-compatible --extensions --ignore-all-space "${trunk}/${f}" "${f}"
+    done
+}
