@@ -1,5 +1,7 @@
 #!/usr/bin/env groovy
 
+// TODO description CSS style incosistent
+
 import groovy.json.JsonSlurper
 import static java.lang.System.exit
 
@@ -61,8 +63,8 @@ class CreateSprintWiki {
                 }
                 totalPoints += storyPoints
                 wikiStories += """
-===${story.name}${storyPoints ? " (${storyPoints} points)" : ''}===
-*'''Story:''' <div style="width: 50%;">''"${story.description}"''</div>
+===${story.name}===
+*'''Story:''' ''"${story.description}"''
 ${storyPoints ? "*'''Points:''' ${storyPoints}\n" : ''}"""
 
                 if (story.tasks) {
@@ -89,7 +91,7 @@ ${storyPoints ? "*'''Points:''' ${storyPoints}\n" : ''}"""
 ${wikiStories}
 
 [[Category:Software]]
-"""
+""".replaceAll(~/\(\[(.+?)\]\((.+?)\)\)/, '[$2 $1]')
     }
 
 
