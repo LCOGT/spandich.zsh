@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-export PAGER=most
+export PAGER=less
 
 export LCOGT_DOMAIN=lco.gtn
 export LCO_ROOT=/lco
@@ -53,7 +53,7 @@ function reset-taskbar() {
   nohup unit-panel-service &> /dev/null &
 }
 
-alias more=most
+alias more=${PAGER}
 alias srv='sudo service'
 alias dfc='dfc -T -ug -W -t ext,ext2,ext3,ext4,nfs'
 alias mysqladmin='sudo mysqladmin'

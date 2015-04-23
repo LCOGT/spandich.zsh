@@ -14,7 +14,13 @@ alias dlltool=x86_64-w64-mingw32-dlltool
 alias lart='ls -lart'
 alias al='dpkg -L'
 
-function a
+function aL() {
+    if [ $# -eq 0 ]; then
+        dpkg -l
+    else
+        dpkg -l | grep -E "$@"
+    fi
+}
 
 function dlldump() {
   if [ $# -ne 1 ]; then

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [ -n "$(ssh lsc-cc bin/reduction_alert_heap)" ]; then
+    echo 'LSC Reduction Server: Java heap space error' \
+        | mail \
+            --return-address spandich@lcogt.net \
+            --subject 'LSC Reduction Server Memory Full' \
+            --to spandich@lcogt.net esaunders@lcogt.net
+fi

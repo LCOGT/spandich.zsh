@@ -102,4 +102,81 @@ function rc-push-sbig-32() {
     ssh ${icc} sha256sum "${lib_deploy}"
 }
 
-alias kb81='ssh -t lsc-aqwa-0m4a-icc1'
+function dump_camera_usb() {
+  if [ $# -ne 1 ]; then
+    echo "Usage: ${0} usb_vendor_id"
+    return
+  fi
+
+  local vendor_id="${1}"; shift
+  
+  local bus_id="$(lsusb -d "${vendor_id}:" | cut -d' ' -f2 | sed 's/^0*//')"
+  if [ -z "${bus_id}" ]; then
+    echo "Error: camera not found." > /dev/stderr
+    return
+  fi
+
+  local device_id="$(lsusb -s "${bus_id}:" -d "${vendor_id}:" | cut -d' ' -f4 | sed 's/:$//')"
+  if [ -z "${device_id}" ]; then
+    echo "Error: camera not found." > /dev/stderr
+    return
+  fi
+
+  local filter=":${bus_id}:${device_id}:"
+
+  local log_file="$(mktemp --suffix=.mon "/tmp/${0}.${bus_id}.${device_id}.XXX")"
+  echo "log_file=${log_file}"
+
+  local usb_stream="/sys/kernel/debug/usb/usbmon/${bus_id}u"
+
+  grep -E "${filter}" "${usb_stream}" > "${log_file}" &
+  local grep_pid="${1}"
+
+  echo -n 'Hit [enter] when complete: '
+  read
+
+  kill "${grep_pid}"
+
+  if [ ! -f "${log_file}" ]; then
+    echo "Error: log file does not exist." > /dev/stderr
+    return
+  fi
+
+  ls -lh "${log_file}"
+  wc -l "${log_file}"
+
+  vusb-analyzer "${log_file}" &> /dev/null
+}
+
+function find_usb_port() {
+    if [ $# -ne 1 ] && [ $# -ne 2 ]; then
+        echo "Usage: ${0} vendor_id [ device_id ]"
+        return
+    fi
+
+    local vendor_id="${1}"; shift
+    local device_id=''
+    if [ $# -ne 0 ]; then
+        device_id="${1}"; shift
+    fi
+
+    local bus_and_device="$(lsusb -d "${vendor_id}:${device_id}" | awk '{ print $2" "$4 }' | sed 's/:$//')"
+    local bus_id="$(echo "${bus_and_device}" | cut -d' ' -f1 | sed s'/^0//')"
+    local device_id="$(echo "${bus_and_device}" | cut -d' ' -f2 | sed 's/^0*//')"
+    local port_id="$(lsusb -t | grep -A100 "Bus ${bus_id}" | grep "Dev ${device_id}" | sed 's/^.\+Port \+\([0-9]\+\).*$/\1/')"
+
+    echo "$(echo "${bus_id}" | sed 's/^0*//') ${device_id} ${port_id}"
+}
+
+function usb_power_toggle() {
+    if [ $# -ne 1 ] && [ $# -ne 2 ]; then
+        echo "Usage: ${0} vendor_id [ device_id ]"
+        return
+    fi
+
+    local result="$(find_usb_port $@)"
+    local bus_id="$(echo "${result}" | cut -d' ' -f1)"
+    local device_id="$(echo "${result}" | cut -d' ' -f2)"
+    local port_id="$(echo "${result}" | cut -d' ' -f3)"
+
+}
