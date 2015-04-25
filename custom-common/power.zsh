@@ -1,10 +1,46 @@
 #!/usr/bin/env zsh
 
-outlet_command='1.3.6.1.4.1.318.1.1.12.3.3.1.1.4'
+power_command_state='1.3.6.1.4.1.318.1.1.12.3.3.1.1.4'
+power_command_list='iso.3.6.1.4.1.318.1.1.12.3.5.1.1.2'
+
+typeset -A POWER_OUTLETS
+export POWER_OUTLETS
+
+typeset -A POWER_DEVICES
+export POWER_DEVICES
 
 function vipower() {
   SELF=${ZSH_CUSTOM_COMMON_DIR}/power.zsh
   vi "${SELF}" && source "${SELF}"
+}
+
+function _power_reset() {
+    POWER_OUTLETS=()
+    POWER_DEVICES=()
+}
+
+function _power_init() {
+    if [ -z "${POWER_ADDRESS}" ] || [ -z "${POWER_COMMUNITY}" ]; then
+        echo "Error: both POWER_ADDRESS and POWER_COMMUNITY must be defined to us the power commands." > /dev/stderr
+        return
+    fi
+
+    if [ "${#POWER_OUTLETS}" -ne 0 ]; then
+        return
+    fi
+
+    local ifs_save="${IFS}"
+    IFS=$'\n'
+
+    _power_reset
+    for line in $(snmpwalk -v 1 -c "${POWER_COMMUNITY}" "${POWER_ADDRESS}" "${power_command_list}" | sed s'/^.\+\.\([0-9]\+\) = STRING: "\(.\+\)"$/\1 \2/'); do
+        local outlet="$(echo "${line}" | cut -d' ' -f1)"
+        local device="$(echo "${line}" | cut -d' ' -f2-)"
+        POWER_OUTLETS+=("${outlet}" "${device}")
+        POWER_DEVICES+=("${device}" "${outlet}")
+    done
+
+    IFS=$"{$ifs_save}"
 }
 
 function _power_print_state() {
@@ -14,13 +50,8 @@ function _power_print_state() {
     printf "[%.2d] %-20s: %s\n" "${outlet}" "${device}" "${state_name}"
 }
 
-function power_device_list() {
-
-    for device in ${(@k)POWER_DEVICES}; do; printf "%.2d %s\n" "${POWER_DEVICES[${device}]}" "${device}"; done | sort -n | cut -d' ' -f2
-}
-
 function power_lookup_device() {
-    source "${ZSH_CUSTOM_COMMON_DIR}/../power_env.zsh"
+    _power_init
 
     if [ $# -ne 1 ]; then
         echo "Usage: ${0} outlet_number"
@@ -34,7 +65,7 @@ function power_lookup_device() {
 }
 
 function power_lookup_outlet() {
-    source "${ZSH_CUSTOM_COMMON_DIR}/../power_env.zsh"
+    _power_init
 
     if [ $# -ne 1 ]; then
         echo "Usage: ${0} device_name"
@@ -47,23 +78,38 @@ function power_lookup_outlet() {
     echo "${outlet}"
 }
 
+function _power_device_list() {
+    _power_init
+
+    for outlet in ${(@k)POWER_OUTLETS}; do
+        local device="${POWER_OUTLETS[${outlet}]}"
+        printf "%0.2d:%s\n" "${outlet}" "${device}"
+    done | sort -n | cut -d: -f2
+}
+
 function power_device_get_state() {
-    source "${ZSH_CUSTOM_COMMON_DIR}/../power_env.zsh"
+    _power_init
 
     local devices
     typeset -a devices
     if [ $# -eq 0 ]; then
-        devices=( $(power_device_list) )
+        devices=()
+        local ifs_save=$"${IFS}"
+        IFS=$'\n'
+        for device in $(_power_device_list); do
+            devices+=("${device}")
+        done
+        IFS=$"${ifs_save}"
     else
         devices=( $@ )
     fi
 
-    for device in ${devices}; do
+    for device in ${devices[@]}; do
         outlet="$(power_lookup_outlet "${device}")"
          if [ -z "${outlet}" ]; then
             state_name='UNKNOWN'
         else
-            local state=$(snmpget -v 1 -c "${POWER_USER}" "${POWER_ADDRESS}" "${outlet_command}.${outlet}" | sed 's/^.\+INTEGER: //')
+            local state=$(snmpget -v 1 -c "${POWER_COMMUNITY}" "${POWER_ADDRESS}" "${power_command_state}.${outlet}" | sed 's/^.\+INTEGER: //')
 
             state_name='OFF'
             [ "${state}" -eq 2 ] || state_name='ON'
@@ -73,8 +119,8 @@ function power_device_get_state() {
     done
 }
 
-function power_state() {
-    source "${ZSH_CUSTOM_COMMON_DIR}/../power_env.zsh"
+function power_device_set_state() {
+    _power_init
 
     if [ $# -ne 2 ]; then
         echo "Usage: ${0} device_name (on|off)"
@@ -97,7 +143,7 @@ function power_state() {
         return
     fi
     
-    snmpset -v 1 -c "${POWER_USER}" "${POWER_ADDRESS}" "${outlet_command}.${outlet}" i "${state}" > /dev/null
+    snmpset -v 1 -c "${POWER_COMMUNITY}" "${POWER_ADDRESS}" "${power_command_state}.${outlet}" i "${state}" > /dev/null
 
     local state_name='OFF'
     [ "${state}" -eq 2 ] || state_name='ON'
@@ -105,7 +151,7 @@ function power_state() {
 }
 
 functon power() {
-    source "${ZSH_CUSTOM_COMMON_DIR}/../power_env.zsh"
+    _power_init
 
     if [ $# -ne 1 ] && [ $# -ne 2 ]; then
         echo "Usage: ${0} device_name [on|off]"
@@ -123,3 +169,5 @@ functon power() {
     power_device_set_state "${device}" "${state_name}"
 }
 
+alias power_state=power_device_get_state
+alias outlet=power_lookup_outlet

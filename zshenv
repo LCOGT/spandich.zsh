@@ -65,4 +65,5 @@ export PATH="${PATH}:${JPROFILER_HOME}/bin"
 
 export PATH="${PATH}:~/.cabal/bin"
 
-export pdu_ip=power
+export POWER_ADDRESS=power
+export POWER_COMMUNITY=panda
