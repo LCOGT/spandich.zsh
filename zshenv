@@ -64,3 +64,5 @@ export JPROFILER_HOME=/opt/jprofiler
 export PATH="${PATH}:${JPROFILER_HOME}/bin"
 
 export PATH="${PATH}:~/.cabal/bin"
+
+export pdu_ip=power
