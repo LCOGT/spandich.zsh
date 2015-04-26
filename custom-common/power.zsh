@@ -9,14 +9,20 @@ export POWER_OUTLETS
 typeset -A POWER_DEVICES
 export POWER_DEVICES
 
+typeset -a POWER_DEVICE_NAMES
+export POWER_DEVICE_NAMES
+
+if [ -n "${ZSH_CUSTOM_COMMON_DIR}" ]; then
 function vipower() {
   SELF=${ZSH_CUSTOM_COMMON_DIR}/power.zsh
   vi "${SELF}" && source "${SELF}"
 }
+fi
 
-function _power_reset() {
+function power_reset() {
     POWER_OUTLETS=()
     POWER_DEVICES=()
+    POWER_DEVICE_NAMES=()
 }
 
 function _power_init() {
@@ -32,12 +38,13 @@ function _power_init() {
     local ifs_save="${IFS}"
     IFS=$'\n'
 
-    _power_reset
+    power_reset
     for line in $(snmpwalk -v 1 -c "${POWER_COMMUNITY}" "${POWER_ADDRESS}" "${power_command_list}" | sed s'/^.\+\.\([0-9]\+\) = STRING: "\(.\+\)"$/\1 \2/'); do
         local outlet="$(echo "${line}" | cut -d' ' -f1)"
         local device="$(echo "${line}" | cut -d' ' -f2-)"
         POWER_OUTLETS+=("${outlet}" "${device}")
         POWER_DEVICES+=("${device}" "${outlet}")
+        POWER_DEVICE_NAMES+=("${device}")
     done
 
     IFS=$"{$ifs_save}"
@@ -48,6 +55,23 @@ function _power_print_state() {
     local device="${1}"; shift
     local state_name="${1}"; shift
     printf "[%.2d] %-20s: %s\n" "${outlet}" "${device}" "${state_name}"
+}
+
+function power_help() {
+    echo "APC PDU Power Commands"
+    echo
+    echo "Commands:"
+    echo "  power_reset                                     -- clear the device/outlet cache"
+    echo "  power_lookup_device outlet_number               -- lookup device by outlet number"
+    echo "  power_lookup_outlet device_name                 -- lookup outlet by device name"
+    echo "  power_device_get_state [ device_name ... ]      -- get the ON/OFF state of one or more devices (default = ALL)"
+    echo "  power_device_set_state device_name (on|off)     -- set the (immediate) power state of a device"
+    echo
+    echo "Shortcuts:"
+    echo "  power device_name                               -- equivalent to: power_device_get_state device_name"
+    echo "  power device_name (on|off)                      -- equivalent to: power_device_set_state device_name (on|off)"
+    echo "  outlet device_name                              -- equivalent to: power_lookup_outlet device_name"
+    echo
 }
 
 function power_lookup_device() {
@@ -78,15 +102,6 @@ function power_lookup_outlet() {
     echo "${outlet}"
 }
 
-function _power_device_list() {
-    _power_init
-
-    for outlet in ${(@k)POWER_OUTLETS}; do
-        local device="${POWER_OUTLETS[${outlet}]}"
-        printf "%0.2d:%s\n" "${outlet}" "${device}"
-    done | sort -n | cut -d: -f2
-}
-
 function power_device_get_state() {
     _power_init
 
@@ -96,7 +111,7 @@ function power_device_get_state() {
         devices=()
         local ifs_save=$"${IFS}"
         IFS=$'\n'
-        for device in $(_power_device_list); do
+        for device in ${POWER_DEVICE_NAMES}; do
             devices+=("${device}")
         done
         IFS=$"${ifs_save}"
@@ -169,5 +184,4 @@ functon power() {
     power_device_set_state "${device}" "${state_name}"
 }
 
-alias power_state=power_device_get_state
 alias outlet=power_lookup_outlet
