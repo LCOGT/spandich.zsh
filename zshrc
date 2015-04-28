@@ -29,7 +29,10 @@ plugins=(
 
 alias mux=tmuxinator
 
+fpath=($HOME/.zsh-completions $fpath)
 source $ZSH/oh-my-zsh.sh
+power_reset
+
 
 # OPAM configuration
 . ~/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true

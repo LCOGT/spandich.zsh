@@ -29,3 +29,8 @@ setopt hist_verify
 setopt no_rm_star_silent
 setopt print_exit_value
 #setopt long_list_jobs
+autoload -U compinit
+
+zstyle ':completion:*' accept-exact '*(N)'
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path ~/.cache/zsh

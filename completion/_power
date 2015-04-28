@@ -1,0 +1,32 @@
+#compdef power
+
+_power() {
+    if (( CURRENT == 2 )); then
+        source ~/.spandich-zsh/custom-common/power.zsh
+        _power_init
+        local devices
+        typeset -a devices
+        devices=(${(@k)POWER_DEVICE_NAMES})
+
+        local commands
+        typeset -a commands
+
+        for raw_command in ${devices[@]}; do
+            if [[ ! "${raw_command}" =~ ' ' ]]; then
+                commands+=("${raw_command}")
+            fi
+        done
+
+        _describe -t commands 'commands' commands
+    elif (( CURRENT = 3)); then
+        local commands
+        typeset -a commands
+        commands=(on off)
+
+        _describe -t commands 'commands' commands
+    fi
+
+    return 0
+}
+
+_power

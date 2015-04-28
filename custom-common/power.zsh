@@ -51,6 +51,8 @@ function _power_init() {
 }
 
 function _power_print_state() {
+echo $@ > /dev/stderr
+return
     local outlet="${1}"; shift
     local device="${1}"; shift
     local state_name="${1}"; shift
@@ -152,7 +154,7 @@ function power_device_set_state() {
     local state=2
     [ "${state_name}" == 'off' ] || state=1
 
-    local outlet="$(power_lookup_outlet ${device})"
+    local outlet="$(power_lookup_outlet "${device}")"
     if [ -z "${outlet}" ]; then
         echo "Error: no such device '${device}'."
         return
@@ -165,7 +167,7 @@ function power_device_set_state() {
     _power_print_state "${outlet}" "${device}" "${state_name}"
 }
 
-functon power() {
+function power() {
     _power_init
 
     if [ $# -ne 1 ] && [ $# -ne 2 ]; then
@@ -185,3 +187,15 @@ functon power() {
 }
 
 alias outlet=power_lookup_outlet
+
+function power_states() {
+    power_device_get_state
+}
+
+function power_devices() {
+    _power_init
+
+    for device in "${(@k)POWER_DEVICE_NAMES}"; do
+        echo "'${device}'"
+    done | paste -d' ' -s
+}
