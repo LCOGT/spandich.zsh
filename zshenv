@@ -67,3 +67,6 @@ export PATH="${PATH}:~/.cabal/bin"
 
 export POWER_ADDRESS=power
 export POWER_COMMUNITY=panda
+
+unset JAVA_TOOL_OPTIONS
+unset _JAVA_OPTIONS

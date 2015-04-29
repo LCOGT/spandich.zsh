@@ -3,6 +3,7 @@
 // TODO description CSS style incosistent
 
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 import static java.lang.System.exit
 
 /*
@@ -44,17 +45,17 @@ class CreateSprintWiki {
         int totalStories = 0
         String wikiStories = ''
 
-        ['started', 'planned'].each { final state ->
-            final String storiesUrl = "${PIVOTAL_API_PROJECTS_URL}/stories?fields=name,description,estimate,tasks&with_state=${state}";
-            final String storiesJson = new URL(storiesUrl).getText([
-                    requestProperties: [
-                            ('X-TrackerToken'): PIVOTAL_API_TOKEN,
-                    ]
-            ])
+        final String storiesUrl = "${PIVOTAL_API_PROJECTS_URL}/iterations?scope=current"
+        final String storiesJson = new URL(storiesUrl).getText([
+                requestProperties: [
+                        ('X-TrackerToken'): PIVOTAL_API_TOKEN,
+                ]
+        ])
 
 
-            final stories = new JsonSlurper().parseText(storiesJson)
-            stories.each { final story ->
+        final iterations = new JsonSlurper().parseText(storiesJson)
+        iterations.each { final iteration ->
+            iteration.stories.findAll { final story -> story?.story_type != 'chore' }.each { final story ->
                 totalStories++
                 int storyPoints = 0
                 try {
@@ -63,20 +64,20 @@ class CreateSprintWiki {
                 }
                 totalPoints += storyPoints
                 wikiStories += """
-===${story.name}===
-*'''Story:''' ''"${story.description}"''
+===[${story.story_type}] ${story.name}===
+*'''Story:''' ''"${story.description ?: 'none'}"''
 ${storyPoints ? "*'''Points:''' ${storyPoints}\n" : ''}"""
 
-                if (story.tasks) {
+            if (story.tasks) {
                     wikiStories += "*'''Tasks:'''\n"
                     story.tasks.each { final task ->
-                        wikiStories += "** ${task.description}\n"
+                        wikiStories += "** ${task?.description ?: 'none'}\n"
                     }
                 }
             }
         }
         
-        println """
+        print """
 *'''Stories:''' ${totalStories}
 *'''Points:''' ${totalPoints}
 *'''Days in Sprint:''' 10
@@ -91,7 +92,7 @@ ${storyPoints ? "*'''Points:''' ${storyPoints}\n" : ''}"""
 ${wikiStories}
 
 [[Category:Software]]
-""".replaceAll(~/\(\[(.+?)\]\((.+?)\)\)/, '[$2 $1]')
+""".replaceAll(~/\[(.+?)\]\((.+?)\)/, '[$2 $1]')
     }
 
 
