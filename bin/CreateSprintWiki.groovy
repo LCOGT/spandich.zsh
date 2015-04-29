@@ -52,10 +52,16 @@ class CreateSprintWiki {
                 ]
         ])
 
-
+        boolean firstStory = true
         final iterations = new JsonSlurper().parseText(storiesJson)
         iterations.each { final iteration ->
             iteration.stories.findAll { final story -> story?.story_type != 'chore' }.each { final story ->
+
+                if (!firstStory) {
+                    wikiStories += '<hr style="width: 200px; height: 2px; color: #D0; margin-bottom: 4em; margin-top: 2em;" />'
+                } else {
+                    firstStory = false
+                }
                 totalStories++
                 int storyPoints = 0
                 try {
@@ -64,13 +70,20 @@ class CreateSprintWiki {
                 }
                 totalPoints += storyPoints
                 wikiStories += """
-===[${story.story_type}] ${story.name}===
+===${story.name}===
 *'''Story:''' ''"${story.description ?: 'none'}"''
 ${storyPoints ? "*'''Points:''' ${storyPoints}\n" : ''}"""
 
-            if (story.tasks) {
+                final String tasksUrl = "${PIVOTAL_API_PROJECTS_URL}/stories/${story.id}/tasks"
+                final String tasksJson = new URL(tasksUrl).getText([
+                    requestProperties: [
+                            ('X-TrackerToken'): PIVOTAL_API_TOKEN,
+                    ]
+                ])
+                final tasks = new JsonSlurper().parseText(tasksJson)
+                if (tasks) {
                     wikiStories += "*'''Tasks:'''\n"
-                    story.tasks.each { final task ->
+                    tasks.each { final task ->
                         wikiStories += "** ${task?.description ?: 'none'}\n"
                     }
                 }
