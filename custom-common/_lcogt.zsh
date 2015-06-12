@@ -55,7 +55,7 @@ function reset-taskbar() {
 
 alias more=${PAGER}
 alias srv='sudo service'
-alias dfc='dfc -T -ug -W -t ext,ext2,ext3,ext4,nfs'
+alias dfc='dfc -wfug -T -t ext,ext2,ext3,ext4'
 alias mysqladmin='sudo mysqladmin'
 alias virc='vi ~/.zshrc'
 alias vienv='vi ~/.zshenv'
@@ -164,8 +164,6 @@ function speak() {
     say "$@"
 }
 
-alias docker=docker.io
-
 function lssbig() {
     ls -l $(lsusb | grep 'SBIG' | cut -d: -f1 | awk '{ print "/dev/bus/usb/"$2"/"$4 }')
 }
@@ -197,4 +195,24 @@ function vifiles() {
     vi *(.) *(@)
 }
 
-alias ports='sudo netstat -nlutp'
+function ports() {
+    if [ $# -eq 0 ]; then
+        sudo netstat -nlutp
+    else
+        sudo netstat -nlutp | grep -E "$@"
+    fi
+}
+
+
+function update_nodes() {
+    for n in 2 3 4 5 6; do
+        figlet $n
+        ssh dn-0$n cd bin \&\& git pull &
+    done
+}
+
+function pyrate() {
+    for f in $@; do
+        pylint "${1}" | grep rated | sed "s/^.\+rated at /${f:t}: /"
+    done
+}

@@ -13,13 +13,27 @@ function figlet {
 }
 
 function fontbook {
-  for font in $(figlist | grep -B100 'Figlet control files in this directory:' | tail -n +1 | grep -Ev '^Figlet\ control' | sort); do
-    echo "figlet -tf $font $*"
+  local directory='/usr/share/figlet'
+  if [[ $# -eq 0 || "${1}" == '-d' && $# -lt 3 ]]; then
+    echo "Usage: $0 [-d directory] message ..."
+    return 1
+  fi
+
+  if [ "${1}" == '-d' ]; then
+    shift
+    directory="$(readlink -f ${1})"; shift
+  fi
+
+  echo "Directory=${directory}"
+  echo
+  echo
+  for font in $(figlist -d "${directory}" | grep -v ' '| sort); do
+    echo "Font: ${font}"
+    echo
+    figlet -d "${directory}" -tf $font $*
     echo ""
-    figlet -w 132 -f $font $*
     echo ""
-    echo ""
-  done
+  done | less
 }
 
 function figcom {

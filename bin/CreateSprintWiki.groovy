@@ -1,7 +1,5 @@
 #!/usr/bin/env groovy
 
-// TODO description CSS style incosistent
-
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import static java.lang.System.exit
@@ -30,9 +28,15 @@ class CreateSprintWiki {
     static final String PIVOTAL_API_TOKEN = "bad8c2be8f551376936246cfd4291d0b";
     static final String PIVOTAL_API_BASE_URL = "https://www.pivotaltracker.com/services/v${PIVOTAL_API_VERSION}"
     static final String PIVOTAL_API_PROJECTS_URL = "${PIVOTAL_API_BASE_URL}/projects/${PIVOTAL_PROJECT_ID}"
-
+    static final String ROLLED_SPAN_CSS='font-weight: bold; color: blue;'
+    static final String STORY_HR_CSS = 'width: 200px; height: 2px; color: #D0; margin-bottom: 4em; margin-top: 2em;'
+    static final String BLOCKQUOTE_COMMON = '<span style="color: #ccc; font-size: 3em; line-height: 0.1em; vertical-align: -0.3em;">'
+    static final String BLOCKQUOTE_BEGIN = "${BLOCKQUOTE_COMMON}<span style=\"margin-right: 0.15em;\">&#8220;</span></span><span style=\"display: inline;\";>"
+    static final String BLOCKQUOTE_END = "</span>${BLOCKQUOTE_COMMON}<span style=\"margin-left: 0.15em;\">&#8221;</span></span>"
 
     static void fetchStories(final int sprintNumber) {
+
+
         final String projectJson = new URL(PIVOTAL_API_PROJECTS_URL).getText([
                 requestProperties: [
                         ('X-TrackerToken'): PIVOTAL_API_TOKEN,
@@ -58,7 +62,7 @@ class CreateSprintWiki {
             iteration.stories.findAll { final story -> story?.story_type != 'chore' }.each { final story ->
 
                 if (!firstStory) {
-                    wikiStories += '<hr style="width: 200px; height: 2px; color: #D0; margin-bottom: 4em; margin-top: 2em;" />'
+                    wikiStories += "<hr style=\"${STORY_HR_CSS}\" />"
                 } else {
                     firstStory = false
                 }
@@ -70,8 +74,8 @@ class CreateSprintWiki {
                 }
                 totalPoints += storyPoints
                 wikiStories += """
-===${story.name}===
-*'''Story:''' ''"${story.description ?: 'none'}"''
+===${story.name}${story.current_state == 'planned' ? '' : "&nbsp;<span style=\"${ROLLED_SPAN_CSS}\">(rolled over)</span>"}===
+*'''Story:''' ''${BLOCKQUOTE_BEGIN}${story.description.replaceAll(/(^[ \n\t]*|[ \n\t]*$)/, '') ?: 'none'}${BLOCKQUOTE_END}''
 ${storyPoints ? "*'''Points:''' ${storyPoints}\n" : ''}"""
 
                 final String tasksUrl = "${PIVOTAL_API_PROJECTS_URL}/stories/${story.id}/tasks"

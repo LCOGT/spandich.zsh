@@ -167,7 +167,14 @@ function sshah {
     die 'could not find public key'
   fi
 
-  cat ~/.ssh/id_rsa.pub | ssh "${user}@${host}" 'mkdir -p .ssh && cd .ssh && touch authorized_keys && chmod 600 authorized_keys && cat >> authorized_keys'
+  cat ~/.ssh/id_rsa.pub \
+    | ssh "${user}@${host}" '\
+        mkdir -p .ssh &&\
+        cd .ssh &&\
+        touch authorized_keys &&\
+        chmod 600 authorized_keys &&\
+        cat >> authorized_keys\
+    '
 }
 
 function check-status-dir {

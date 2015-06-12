@@ -51,7 +51,7 @@ function _svnco() {
   local function_name=${1}; shift;
   local base=${1}; shift
 
-  if [ $# -ew  0 ] || [ $# -gt 3 ]; then
+  if [ $# -eq  0 ] || [ $# -gt 3 ]; then
     echo "Usage: ${0} project_name [ branch [ dir ] ]"
     return 1
   fi
@@ -171,16 +171,7 @@ function svnbranch() {
 }
 
 function svnlast() {
-    svn log \
-        | grep -A100 $(svn log  --stop-on-copy --quiet \
-        | grep -E '^r' \
-        | tail -n 1 \
-        | awk '{ print $1 }') \
-        | grep -E '^r[0-9]+' \
-        | head -n 2 \
-        | tail -n 1 \
-        | awk '{ print $1 }' \
-        | sed 's/^r//'
+    svn log -v --stop-on-copy | grep -E '^r[0-9]+ ' | tail -n1 | cut -d' ' -f1 | sed 's/^r//'
 }
 
 function svntrunk() {

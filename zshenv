@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-export PATH="/opt/intel/bin:/opt/epd/bin:/usr/local/astrometry/bin:/home/spandich/bin:/usr/lib64/qt-3.3/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/opt/intel/bin:/opt/epd/bin:/usr/local/astrometry/bin:/usr/local/bin:/usr/bin:/bin:/home/spandich/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/wcstools/bin:/opt/wcstools/bin:${HOME}/.gvm/groovy/current/bin"
+export PATH="/opt/intel/bin:/usr/local/astrometry/bin:/home/spandich/bin:/usr/lib64/qt-3.3/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/opt/intel/bin:/usr/local/astrometry/bin:/usr/local/bin:/usr/bin:/bin:/home/spandich/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/wcstools/bin:/opt/wcstools/bin:${HOME}/.gvm/groovy/current/bin"
 export PATH="${HOME}/bin:${PATH}"
 
 export ZSH=$HOME/.oh-my-zsh
@@ -52,10 +52,11 @@ export WORKSPACE=~/workspace
 export JAVA_HOME="${JAVA7_HOME}"
 export PATH="${JAVA_HOME}/bin:${PATH}"
 
+export CLOJURE_HOME=/opt/clojure
+export PATH="${PATH}:${CLOJURE_HOME}/bin"
+
 export MAVEN_HOME=/opt/maven3
 export PATH="${PATH}:${MAVEN_HOME}/bin"
-
-export PATH="/opt/epd/bin:${PATH}"
 
 export SWIG3_HOME=/opt/swig3
 export PATH="${SWIG3_HOME}/bin:${PATH}"

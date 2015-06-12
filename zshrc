@@ -24,6 +24,7 @@ plugins=(
   colored-man
   svn-fast-info
   debian
+  fabric
   sudo
 )
 
